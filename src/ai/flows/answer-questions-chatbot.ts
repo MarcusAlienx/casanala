@@ -7,13 +7,24 @@
  * - AnswerQuestionsChatbotOutput - The return type for the answerQuestionsChatbot function.
  */
 
-import {ai} from '@/ai/ai-instance';
-import {z} from 'genkit';
-import {getMenu, FoodItem} from '@/services/uber-eats';
+import { ai } from '@/ai/ai-instance';
+import { z } from 'genkit';
+// Removed: import {getMenu, FoodItem} from '@/services/uber-eats';
+
+// Define the structure of a menu item (matching MenuItemProps from frontend)
+const MenuItemSchema = z.object({
+  id: z.union([z.string(), z.number()]),
+  name: z.string(),
+  description: z.string(),
+  price: z.number(),
+  category: z.string(),
+  imageUrl: z.string().optional(),
+});
 
 const AnswerQuestionsChatbotInputSchema = z.object({
   question: z.string().describe('The question from the customer.'),
-  restaurantId: z.string().describe('The ID of the restaurant.'),
+  // Removed restaurantId
+  menuItems: z.array(MenuItemSchema).describe('The current list of menu items.'), // Added menuItems input
   userLocation: z
     .object({
       latitude: z.number().describe('The latitude of the user.'),
@@ -29,6 +40,7 @@ const AnswerQuestionsChatbotOutputSchema = z.object({
 });
 export type AnswerQuestionsChatbotOutput = z.infer<typeof AnswerQuestionsChatbotOutputSchema>;
 
+// This function is intended to be called from a server-side context (like an API route)
 export async function answerQuestionsChatbot(
   input: AnswerQuestionsChatbotInput
 ): Promise<AnswerQuestionsChatbotOutput> {
@@ -69,18 +81,19 @@ const prompt = ai.definePrompt({
       answer: z.string().describe('The answer to the customer question.'),
     }),
   },
-  prompt: `You are a chatbot for CasaNala, a Mexican restaurant. Use the menu information to answer the customer question. If the user provides location information, decide whether to use it to inform the answer.
+  // Updated prompt instructions
+  prompt: `Eres un amigable asistente de chatbot para Casa Nala, un restaurante de comida mexicana. Usa la información del menú proporcionada para responder la pregunta del cliente. Si el usuario proporciona información de ubicación, considera si es relevante para la respuesta (por ejemplo, para preguntas sobre entrega o distancia). Sé conciso y útil.
 
-Menu:
+Menú:
 {{menu}}
 
-Question: {{{question}}}
+Pregunta: {{{question}}}
 
 {{#if locationInfo}}
-Location Information: {{{locationInfo}}}
+Información de Ubicación: {{{locationInfo}}}
 {{/if}}
 
-Answer:`, // Updated Handlebars syntax
+Respuesta:`, 
   tools: [getLocationInfo],
 });
 
@@ -95,16 +108,21 @@ const answerQuestionsChatbotFlow = ai.defineFlow<
   },
   async input => {
     try {
-      const menu = await getMenu(input.restaurantId);
-      const menuString = menu.items.map(item => `${item.name}: ${item.description} ($${item.price})`).join('\n');
+      // Use the menu passed in the input
+      const menuString = input.menuItems.map(item => `${item.name} (${item.category}): ${item.description || ''} ($${item.price.toFixed(2)})`).join('
+');
 
       let locationInfo: string | undefined = undefined;
+      // Location logic remains the same
       if (input.userLocation) {
         const {latitude, longitude} = input.userLocation;
-        locationInfo = await getLocationInfo({
-          latitude: latitude,
-          longitude: longitude,
-        });
+        // Note: Tool execution might require specific Genkit setup depending on environment
+        try {
+          locationInfo = await getLocationInfo({ latitude, longitude });
+        } catch (toolError) {
+            console.error("Error executing getLocationInfo tool:", toolError);
+            locationInfo = "No se pudo obtener la información de ubicación.";
+        }
       }
 
       const {output} = await prompt({
@@ -112,10 +130,16 @@ const answerQuestionsChatbotFlow = ai.defineFlow<
         menu: menuString,
         locationInfo: locationInfo,
       });
-      return output!;
+
+      if (!output) {
+          throw new Error("El modelo no generó una respuesta.");
+      }
+      return output;
+      
     } catch (e: any) {
-      console.error('Error in answerQuestionsChatbotFlow:', e);
-      throw e;
+      console.error('Error en answerQuestionsChatbotFlow:', e);
+      // Provide a user-friendly error message
+      return { answer: "Lo siento, no pude procesar tu pregunta en este momento." };
     }
   }
 );
