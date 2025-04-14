@@ -3,8 +3,8 @@ import { Geist } from 'next/font/google';
 import './globals.css';
 import CasaNalaLogo from '../components/CasaNalaLogo';
 import { AuthProvider } from '@/context/AuthContext';
-import { ThemeProvider } from "@/components/ui/theme-provider"; 
-import { Toaster } from "@/components/ui/toaster"; 
+import { ThemeProvider } from "@/components/ui/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
 import { LogoutButton } from '@/components/LogoutButton'; // Import LogoutButton
 
 const geistSans = Geist({
@@ -31,10 +31,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider> 
+          <AuthProvider>
             <header className="p-4 border-b sticky top-0 bg-background z-10">
               <div className="container mx-auto flex justify-between items-center">
-                 <CasaNalaLogo /> 
+                 <CasaNalaLogo />
                  {/* Navigation or User Info could go here */}
                  <LogoutButton /> {/* Add Logout Button here */}
               </div>
@@ -45,7 +45,7 @@ export default function RootLayout({
             <footer className="p-4 border-t text-center text-sm text-muted-foreground mt-auto"> {/* Push footer down */}
                Casa Nala &copy; {new Date().getFullYear()}
             </footer>
-            <Toaster /> 
+            <Toaster />
            </AuthProvider>
         </ThemeProvider>
       </body>
