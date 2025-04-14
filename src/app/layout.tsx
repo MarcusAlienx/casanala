@@ -3,7 +3,7 @@ import { Geist } from 'next/font/google';
 import './globals.css';
 import CasaNalaLogo from '../components/CasaNalaLogo';
 import { AuthProvider } from '@/context/AuthContext';
-import { ThemeProvider } from "@/components/ThemeProvider"; 
+import { ThemeProvider } from "@/components/ui/theme-provider"; 
 import { Toaster } from "@/components/ui/toaster"; 
 import { LogoutButton } from '@/components/LogoutButton'; // Import LogoutButton
 
