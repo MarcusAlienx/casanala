@@ -111,10 +111,10 @@ const prompt = ai.definePrompt({
   - {{name}}: {{description}} (${{price}})
   {{/each}}
 
-  {% if dietaryRestrictions %}The user has the following dietary restrictions: {{{dietaryRestrictions}}}.{% endif %}
-  {% if preferences %}The user has the following food preferences: {{{preferences}}}.{% endif %}
-  {% if pastOrders %}The user has the following past orders: {{{pastOrders}}}.{% endif %}
-  {% if includeLocation %}The user location is: Latitude: {{{userLocation.latitude}}}, Longitude: {{{userLocation.longitude}}}.{% endif %}
+  {{#if dietaryRestrictions }}The user has the following dietary restrictions: {{{dietaryRestrictions}}}.{{/if}}
+  {{#if preferences }}The user has the following food preferences: {{{preferences}}}.{{/if}}
+  {{#if pastOrders }}The user has the following past orders: {{{pastOrders}}}.{{/if}}
+  {{#if includeLocation }}The user location is: Latitude: {{{userLocation.latitude}}}, Longitude: {{{userLocation.longitude}}}.{{/if}}
 
   Recommend some dishes from the menu, considering the user's dietary restrictions, preferences, past orders, and location (if available).
 
