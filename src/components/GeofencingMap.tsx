@@ -57,3 +57,4 @@ const GeofencingMap = () => {
 };
 
 export default GeofencingMap;
+
