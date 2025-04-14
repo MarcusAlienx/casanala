@@ -1,1 +1,2 @@
-// Flows will be imported for their side effects in this file.
+import '@/ai/flows/answer-questions-chatbot.ts';
+import '@/ai/flows/get-recommendations-chatbot.ts';
