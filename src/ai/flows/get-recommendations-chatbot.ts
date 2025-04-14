@@ -135,19 +135,32 @@ const getRecommendationsFlow = ai.defineFlow<
     outputSchema: GetRecommendationsOutputSchema,
   },
   async input => {
-    const menuItems = await getMenuTool({
-      restaurantId: 'casa-nala',
-    });
+    try {
+      const menuItems = await getMenuTool({
+        restaurantId: 'casa-nala',
+      });
 
-    const includeLocation = await shouldIncludeLocation({
-      question: JSON.stringify(input),
-    });
+      let includeLocation = false;
+      try {
+        includeLocation = await shouldIncludeLocation({
+          question: JSON.stringify(input),
+        });
+      } catch (error) {
+        console.error("Error in shouldIncludeLocation tool:", error);
+        // Handle the error gracefully, e.g., log it and set a default value
+        includeLocation = false; // Default to not including location
+      }
 
-    const {output} = await prompt({
-      ...input,
-      menu: menuItems,
-      includeLocation: includeLocation,
-    });
-    return output!;
+
+      const {output} = await prompt({
+        ...input,
+        menu: menuItems,
+        includeLocation: includeLocation,
+      });
+      return output!;
+    } catch (e: any) {
+      console.error('Error in getRecommendationsFlow:', e);
+      throw e;
+    }
   }
 );

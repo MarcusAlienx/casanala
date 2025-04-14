@@ -1,4 +1,3 @@
-// 'use server'
 'use server';
 /**
  * @fileOverview An AI chatbot that answers customer questions about menu items, ingredients, and preparation methods.
@@ -46,8 +45,13 @@ const getLocationInfo = ai.defineTool({
   outputSchema: z.string(),
 },
 async input => {
-  // TODO: Implement this by calling a geolocation API.
-  return `User location is: Latitude ${input.latitude}, Longitude ${input.longitude}`;
+  try {
+    // TODO: Implement this by calling a geolocation API.
+    return `User location is: Latitude ${input.latitude}, Longitude ${input.longitude}`;
+  } catch (error) {
+    console.error("Error getting location info:", error);
+    return "Location information is not available."; // Provide a default response
+  }
 }
 );
 
@@ -90,24 +94,28 @@ const answerQuestionsChatbotFlow = ai.defineFlow<
     outputSchema: AnswerQuestionsChatbotOutputSchema,
   },
   async input => {
-    const menu = await getMenu(input.restaurantId);
-    const menuString = menu.items.map(item => `${item.name}: ${item.description} ($${item.price})`).join('\n');
+    try {
+      const menu = await getMenu(input.restaurantId);
+      const menuString = menu.items.map(item => `${item.name}: ${item.description} ($${item.price})`).join('\n');
 
-    let locationInfo: string | undefined = undefined;
-    if (input.userLocation) {
-      const {latitude, longitude} = input.userLocation;
-      locationInfo = await getLocationInfo({
-        latitude: latitude,
-        longitude: longitude,
+      let locationInfo: string | undefined = undefined;
+      if (input.userLocation) {
+        const {latitude, longitude} = input.userLocation;
+        locationInfo = await getLocationInfo({
+          latitude: latitude,
+          longitude: longitude,
+        });
+      }
+
+      const {output} = await prompt({
+        question: input.question,
+        menu: menuString,
+        locationInfo: locationInfo,
       });
+      return output!;
+    } catch (e: any) {
+      console.error('Error in answerQuestionsChatbotFlow:', e);
+      throw e;
     }
-
-    const {output} = await prompt({
-      question: input.question,
-      menu: menuString,
-      locationInfo: locationInfo,
-    });
-    return output!;
   }
 );
-
