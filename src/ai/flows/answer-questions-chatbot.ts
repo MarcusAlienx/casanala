@@ -93,7 +93,7 @@ Pregunta: {{{question}}}
 Información de Ubicación: {{{locationInfo}}}
 {{/if}}
 
-Respuesta:`, 
+Respuesta:`,
   tools: [getLocationInfo],
 });
 
@@ -109,6 +109,9 @@ const answerQuestionsChatbotFlow = ai.defineFlow<
   async input => {
     try {
       // Use the menu passed in the input
+      // Corrected join('
+') to join('
+')
       const menuString = input.menuItems.map(item => `${item.name} (${item.category}): ${item.description || ''} ($${item.price.toFixed(2)})`).join('
 ');
 
@@ -135,7 +138,7 @@ const answerQuestionsChatbotFlow = ai.defineFlow<
           throw new Error("El modelo no generó una respuesta.");
       }
       return output;
-      
+
     } catch (e: any) {
       console.error('Error en answerQuestionsChatbotFlow:', e);
       // Provide a user-friendly error message

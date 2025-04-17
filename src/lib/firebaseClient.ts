@@ -15,11 +15,16 @@ const firebaseConfig = {
 };
 
 // Inicializar Firebase App (asegurándose que solo se haga una vez)
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+let app;
+if (!firebaseConfig.apiKey) {
+  console.error("Firebase API key is missing. Ensure NEXT_PUBLIC_FIREBASE_API_KEY is set in your environment variables.");
+} else {
+  app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+}
 
 // Obtener instancias de los servicios que necesitas
-const authClient = getAuth(app);
-const firestoreClient = getFirestore(app); // Firestore para el cliente (si lo usas)
+const authClient = app ? getAuth(app) : null;
+const firestoreClient = app ? getFirestore(app) : null; // Firestore para el cliente (si lo usas)
 
 // Exportar las instancias
 export { app, authClient, firestoreClient };

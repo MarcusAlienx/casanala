@@ -26,30 +26,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(authClient, async (firebaseUser) => {
-            if (firebaseUser) {
-                // Usuario conectado, obtener su rol de Firestore
-                 try {
-                    const userDocRef = doc(firestoreClient, 'users', firebaseUser.uid);
-                    const userDocSnap = await getDoc(userDocRef);
-                    let role = 'cliente'; // Rol por defecto si no se encuentra o no está definido
-                    if (userDocSnap.exists() && userDocSnap.data().role) {
-                        role = userDocSnap.data().role; // Obtener rol desde Firestore
+        let unsubscribe;
+        if (authClient) {
+            unsubscribe = onAuthStateChanged(authClient, async (firebaseUser) => {
+                if (firebaseUser) {
+                    // Usuario conectado, obtener su rol de Firestore
+                    try {
+                        const userDocRef = doc(firestoreClient, 'users', firebaseUser.uid);
+                        const userDocSnap = await getDoc(userDocRef);
+                        let role = 'cliente'; // Rol por defecto si no se encuentra o no está definido
+                        if (userDocSnap.exists() && userDocSnap.data().role) {
+                            role = userDocSnap.data().role; // Obtener rol desde Firestore
+                        }
+                        setUser({ ...firebaseUser, role }); // Guardar usuario con rol
+                    } catch (error) {
+                        console.error("Error fetching user role:", error);
+                        setUser({ ...firebaseUser, role: 'cliente' }); // Asignar rol por defecto en caso de error
                     }
-                    setUser({ ...firebaseUser, role }); // Guardar usuario con rol
-                 } catch (error) {
-                    console.error("Error fetching user role:", error);
-                    setUser({ ...firebaseUser, role: 'cliente' }); // Asignar rol por defecto en caso de error
-                 }
-            } else {
-                // Usuario desconectado
-                setUser(null);
-            }
+                } else {
+                    // Usuario desconectado
+                    setUser(null);
+                }
+                setLoading(false);
+            });
+        } else {
+            console.warn("Firebase authClient is null.  Check Firebase configuration.");
             setLoading(false);
-        });
+            return;
+        }
+
 
         // Limpiar suscripción al desmontar
-        return () => unsubscribe();
+        return () => unsubscribe?.();
     }, []);
 
     return (
@@ -67,3 +75,4 @@ export function useAuth() {
     }
     return context;
 }
+
